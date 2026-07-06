@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>출자 펀드 포트폴리오사 리스트</title>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+ <style>
+ * { box-sizing: border-box; margin: 0; padding: 0; }
+ body { font-family: 'Noto Sans KR', sans-serif; background: #f5f7fa; color: #263248; line-height: 1.55; }
+ .page-shell { width: min(1600px, calc(100% - 32px)); margin: 0 auto; }
+ .site-header { background: #1a3a6c; color: #fff; padding: 24px 0 20px; box-shadow: 0 4px 16px rgba(26,58,108,.2); }
+ .title-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+ h1 { font-size: clamp(1.4rem, 2.5vw, 2.2rem); font-weight: 700; color: #fff; letter-spacing: -.03em; }
+ .as-of { font-size: 0.78rem; color: rgba(255,255,255,.55); white-space: nowrap; padding-bottom: 4px; }
+ .filter-panel { display: flex; flex-wrap: wrap; gap: 8px; }
+ .filter-btn {
+  border: 1.5px solid rgba(255,255,255,.6); border-radius: 20px; padding: 6px 18px;
+  background: transparent; color: rgba(255,255,255,.85); font-family: inherit;
+  font-size: 0.88rem; font-weight: 500; cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+ }
+ .filter-btn:hover { background: rgba(255,255,255,.15); color: #fff; border-color: #fff; }
+ .filter-btn.active { background: #fff; color: #1a3a6c; border-color: #fff; font-weight: 700; }
+ .content-area { padding: 20px 0 32px; }
+ .summary-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 12px; flex-wrap: wrap; }
+ #count-display { font-weight: 700; color: #1a3a6c; font-size: 1rem; }
+ .legend { display: flex; gap: 14px; font-size: 0.78rem; color: #6a7485; flex-wrap: wrap; }
+ .legend-item { display: inline-flex; align-items: center; gap: 5px; }
+ .swatch { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+ .swatch-pink { background: #ffe0ee; }
+ .swatch-green { background: #d4f5e0; }
+ .table-container { overflow-x: auto; overflow-y: auto; max-height: 78vh; background: #fff; border: 1px solid #c8d6e8; border-radius: 12px; box-shadow: 0 8px 28px rgba(26,58,108,.1); }
+ table { width: 100%; min-width: 1300px; border-collapse: collapse; table-layout: fixed; }
+ thead th {
+  position: sticky; top: 0; z-index: 10; background: #1a3a6c; color: #fff;
+  font-weight: 700; font-size: 0.85rem; padding: 12px 10px; text-align: center;
+  border-right: 1px solid rgba(255,255,255,.15); white-space: nowrap;
+ }
+ thead th:last-child { border-right: none; }
+ tbody td {
+  padding: 10px 10px; vertical-align: top; border-bottom: 1px solid #e4ecf6;
+  border-right: 1px solid #e4ecf6; font-size: 0.83rem; word-break: keep-all;
+  overflow-wrap: anywhere; white-space: pre-wrap; background: #ffffff;
+ }
+ tbody td:last-child { border-right: none; }
+ tbody tr:hover td { filter: brightness(.97); }
+ .col-no { width: 54px; } .col-fund { width: 110px; } .col-portfolio { width: 170px; }
+ .col-sector { width: 130px; } .col-business { width: 28%; } .col-note { width: 28%; }
+ .col-website { width: 110px; }
+ .tc { text-align: center; } .bold { font-weight: 700; }
+ a.site-link {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 64px;
+  padding: 5px 10px; border-radius: 999px; background: #1a3a6c; color: #ffffff;
+  font-weight: 700; text-decoration: none; font-size: 0.75rem; line-height: 1.2;
+  box-shadow: 0 2px 6px rgba(26,58,108,.16);
+  transition: background .15s, transform .15s, box-shadow .15s;
+ }
+ a.site-link:hover { background: #0d2040; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(26,58,108,.22); }
+ footer { text-align: center; font-size: 0.78rem; color: #9aa3b0; padding: 16px 0 24px; }
+ .loading { text-align: center; padding: 60px; color: #64748b; font-size: 1.1rem; }
+ .btn-logout {
+  background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.4); color: #fff;
+  padding: 6px 16px; border-radius: 20px; cursor: pointer; font-family: inherit;
+  font-size: 0.82rem; font-weight: 500;
+ }
+ @media (max-width: 768px) { .title-row { flex-direction: column; align-items: flex-start; } .as-of { padding-bottom: 0; } }
+ </style>
+</head>
+<body>
+<header class="site-header">
+ <div class="page-shell">
+  <div class="title-row">
+   <h1>출자 펀드 포트폴리오사 리스트</h1>
+   <div style="display:flex;align-items:center;gap:12px;">
+    <span class="as-of">[Google Sheet 기반 · 실시간]</span>
+    <button class="btn-logout" onclick="firebase.auth().signOut().then(()=>window.location.href='/')">로그아웃</button>
+   </div>
+  </div>
+  <nav class="filter-panel" id="filter-panel"></nav>
+ </div>
+</header>
+<main class="content-area">
+ <div class="page-shell">
+  <div class="summary-bar">
+   <span id="count-display">로딩 중...</span>
+   <div class="legend">
+    <span class="legend-item"><span class="swatch swatch-pink"></span>투자 기업</span>
+    <span class="legend-item"><span class="swatch swatch-green"></span>주요 관심 기업</span>
+   </div>
+  </div>
+  <div class="table-container">
+   <table>
+    <thead>
+     <tr>
+      <th class="col-no">순서</th>
+      <th class="col-fund">펀드명</th>
+      <th class="col-portfolio">포트폴리오</th>
+      <th class="col-sector">섹터</th>
+      <th class="col-business">Business</th>
+      <th class="col-note">주요성과 및 현황</th>
+      <th class="col-website">웹사이트</th>
+     </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+   </table>
+  </div>
+ </div>
+</main>
+<footer>© 2026 Portfolio Management | Google Sheet Backend | Updated: 실시간</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script>
+ const firebaseConfig = {
+  apiKey: "AIzaSyCPCJqFqIbXwQr7KzgGGxHE_ME",
+  authDomain: "portfolio-44470.firebaseapp.com",
+  projectId: "portfolio-44470",
+  storageBucket: "portfolio-44470.firebasestorage.app",
+  messagingSenderId: "1059977551878",
+  appId: "1:1059977551878:web:51217f2fe72ca72e3de387"
+ };
+ if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+ const auth = firebase.auth();
+ auth.onAuthStateChanged(user => { if (!user) window.location.href = '/'; });
+
+ // Google Sheet CSV URL
+ const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1Dowguk7lu1dqfkEHspBEwXW1OKMnAAvCergHnp-1Cww/export?format=csv&gid=0';
+
+ let ALL_DATA = [];
+ let currentFund = 'all';
+
+ async function loadSheetData() {
+  try {
+   const res = await fetch(SHEET_CSV_URL);
+   const text = await res.text();
+   const rows = parseCSV(text);
+   const header = rows[0];
+   ALL_DATA = rows.slice(1).map((row, i) => ({
+    no: row[0] || '',
+    fund: row[1] || '',
+    portfolio: row[2] || '',
+    sector: row[3] || '',
+    business: row[4] || '',
+    note: row[5] || '',
+    website: row[6] || ''
+   })).filter(d => d.portfolio);
+   renderFilters();
+   renderTable();
+  } catch (err) {
+   document.getElementById('count-display').textContent = '데이터 로딩 실패: ' + err.message;
+  }
+ }
+
+ function parseCSV(text) {
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let inQuote = false;
+  for (let i = 0; i < text.length; i++) {
+   const ch = text[i];
+   if (inQuote) {
+    if (ch === '"') {
+     if (text[i+1] === '"') { cell += '"'; i++; }
+     else { inQuote = false; }
+    } else { cell += ch; }
+   } else {
+    if (ch === '"') { inQuote = true; }
+    else if (ch === ',') { row.push(cell); cell = ''; }
+    else if (ch === '\n' || ch === '\r') {
+     if (ch === '\r' && text[i+1] === '\n') i++;
+     row.push(cell); cell = '';
+     if (row.length > 0) rows.push(row);
+     row = [];
+    } else { cell += ch; }
+   }
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+ }
+
+ function renderFilters() {
+  const funds = [...new Set(ALL_DATA.map(d => d.fund))].filter(Boolean);
+  const panel = document.getElementById('filter-panel');
+  panel.innerHTML = '<button class="filter-btn active" onclick="filterFund(\'all\', this)">전체</button>';
+  funds.forEach(f => {
+   const short = f.replace('Primer Sazze 1','PSF1').replace('Primer Sazze 2','PSF2').replace('Sazze 3','Sazze3');
+   panel.innerHTML += `<button class="filter-btn" onclick="filterFund('${f}', this)">${short}</button>`;
+  });
+ }
+
+ function filterFund(fund, btn) {
+  currentFund = fund;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+ }
+
+ function renderTable() {
+  const filtered = currentFund === 'all' ? ALL_DATA : ALL_DATA.filter(d => d.fund === currentFund);
+  document.getElementById('count-display').textContent = `총 ${filtered.length}개 포트폴리오`;
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = filtered.map(d => `
+   <tr>
+    <td class="tc bold">${d.no}</td>
+    <td>${d.fund}</td>
+    <td class="bold">${d.portfolio}</td>
+    <td>${d.sector}</td>
+    <td>${d.business}</td>
+    <td>${d.note}</td>
+    <td class="tc">${d.website ? `<a class="site-link" href="${d.website}" target="_blank" rel="noopener">바로가기</a>` : '-'}</td>
+   </tr>
+  `).join('');
+ }
+
+ loadSheetData();
+</script>
+</body>
+</html>
